@@ -47,9 +47,13 @@ Create the following elements in your AWS Console
 2. Name the VPC to DemoNetworking
 3. Set IPv4 CIDR block(Classless Inter-Domain Routing)  to manual input
 4. Set IPv4 CIDR to 10.0.0.0/16
-5. Ignore IPv6 and Tenancy sections.
-6. Set tag Env = Dev
-7. Create the VPC
+5. 10.0.0.0/24 private range CIDR
+6. 10.0.0.34 private host 
+7. 10.0.1.0/24 public range CIDR
+8. 10.0.1.12 public host
+9. Ignore IPv6 and Tenancy sections.
+10. Set tag Env = Dev
+11. Create the VPC
 
 ### Private Subnet
 
@@ -120,33 +124,37 @@ Create the following elements in your AWS Console
    
    node --version
    ```
-4. Clone git repository
-5. Start server 
+4. Clone git [repository](https://github.com/joanux810/LaboratoriosCursoDevOps.git) 
+5. Install Apache with
+   ```
+   yum install httpd
+   ```
+6. Start server 
    ```
    node /src/serverip.js
    ```
-6. Create a SG with 
+7. Create a SG with 
    -  HTTP 80
    -  SSH 22
-7. Launch the EC2
-8. Test the application
-9. Install pm2
+8. Launch the EC2
+9.  Test the application
+10. Install pm2
     ```
     npm install pm2 -g
     ```
-10. Start the app
+11. Start the app
     ```
     pm2 start server.js
     ```
-11. Check pm2 again with
+12. Check pm2 again with
     ```
     pm2 startup
     ```
-12. Copy and paste the command the is going to return, similar to
+13. Copy and paste the command the is going to return, similar to
     ```
     sudo env PATH=$PATH:/home/ec2-user/.nvm/versions/node/v17.4.0/bin /home/ec2-user/.nvm/versions/node/v17.4.0/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
     ```
-13. Proceed to save the configuration with
+14. Proceed to save the configuration with
     ```
     pm2 save
     ```
