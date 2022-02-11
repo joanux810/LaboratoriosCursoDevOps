@@ -124,37 +124,76 @@ Create the following elements in your AWS Console
    
    node --version
    ```
-4. Clone git [repository](https://github.com/joanux810/LaboratoriosCursoDevOps.git) 
-5. Install Apache with
+4. Install git in your EC2 instance
+   
    ```
-   yum install httpd
+   yum install git
+   git  --version
+   ```
+
+5. Clone the [repository](https://github.com/joanux810/LaboratoriosCursoDevOps.git) 
+   ```
+   git clone https://github.com/joanux810/LaboratoriosCursoDevOps.git
    ```
 6. Start server 
    ```
    node /src/serverip.js
    ```
-7. Create a SG with 
+7. In this step we have two options to server the application to production.
+   - via Apache/NodeJS
+   - via PM2
+   Description for both options are below and up to you.
+8. If you choose install **Apache**, the installation is running 
+   ```
+   yum install httpd
+   ```
+    8.1. Start the service
+    ```
+    httpd start -f /var/www/html/serverip.js
+    ```
+    8.2. The port 80 is used for the Apache's default page, so update the code to point to another port; for instance 8080
+    ```
+    vi Git/LaboratoriosCursoDevOps/Nodo1/src/serverip.js
+    ```
+    8.3. Edit the configuration rules to redirect to 8080
+    ```
+    vi /etc/httpd/conf/httpd.conf
+    ``` 
+    by adding at the end of the document
+    ```
+    LoadModule proxy_module modules/mod_proxy.so
+    LoadModule proxy_http_module modules/mod_proxy_http.so
+    ProxyPass /node http://localhost:8080
+    ```
+   
+    8.4. Restart the service
+    ```
+    service httpd restart
+    ```
+    8.5. Open the port 8080 in the EC2 instance's Security Group
+
+9.  Create a SG with 
    -  HTTP 80
    -  SSH 22
-8. Launch the EC2
-9.  Test the application
-10. Install pm2
+11. Launch the EC2
+12. Test the application
+13. Install pm2
     ```
     npm install pm2 -g
     ```
-11. Start the app
+14. Start the app
     ```
     pm2 start server.js
     ```
-12. Check pm2 again with
+15. Check pm2 again with
     ```
     pm2 startup
     ```
-13. Copy and paste the command the is going to return, similar to
+16. Copy and paste the command the is going to return, similar to
     ```
     sudo env PATH=$PATH:/home/ec2-user/.nvm/versions/node/v17.4.0/bin /home/ec2-user/.nvm/versions/node/v17.4.0/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
     ```
-14. Proceed to save the configuration with
+17. Proceed to save the configuration with
     ```
     pm2 save
     ```
