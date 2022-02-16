@@ -177,26 +177,58 @@ Create the following elements in your AWS Console
    -  SSH 22
 11. Launch the EC2
 12. Test the application
-13. Install pm2
+13. The following steps describes the PM2 Process
+14. Install pm2
     ```
-    npm install pm2 -g
+    sudo npm install pm2 -g
     ```
-14. Start the app
+15. Review the current apps running
     ```
-    pm2 start server.js
+    pm2 ls
     ```
-15. Check pm2 again with
+16. Start the node application with
+    ```
+    pm2 start LaboratoriosCursoDevOps/Nodo1/src/serverip.js
+    ```
+17. Ensure the app is working as expected
+18. Enable auto run of the app
     ```
     pm2 startup
     ```
-16. Copy and paste the command the is going to return, similar to
+19. Notice the command the is going to return, similar to: 
     ```
     sudo env PATH=$PATH:/home/ec2-user/.nvm/versions/node/v17.4.0/bin /home/ec2-user/.nvm/versions/node/v17.4.0/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
     ```
-17. Proceed to save the configuration with
+    then, copy and paste in the CLI
+20. Proceed to save the configuration with
     ```
     pm2 save
+    pm2 startup
     ```
+21. Restart your EC2 instance to ensure the app is starting automatically
+    ```
+    reboot
+    ```
+22. Check the processes with
+    ```
+    pm2 list
+    ```
+23. Check the logs with
+    ```
+    pm2 logs
+    pm2 logs --lines 30
+    ```
+24. Check the dashboard with
+    ```
+    pm2 monit
+    ```
+25. You can stop the app with
+    ```
+    pm2 stop /var/www/html/serverip.js
+    ```
+
+    
+
    
 ### Application Load Balancer 
 1. Create a new public subnet, for instance 10.0.2.0/24
