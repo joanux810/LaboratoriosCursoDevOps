@@ -200,6 +200,7 @@ Create the following elements in your AWS Console
     sudo env PATH=$PATH:/home/ec2-user/.nvm/versions/node/v17.4.0/bin /home/ec2-user/.nvm/versions/node/v17.4.0/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
     ```
     then, copy and paste in the CLI
+    **NOTE**: This is applicable is earlier versions of PM2
 20. Proceed to save the configuration with
     ```
     pm2 save
@@ -271,17 +272,39 @@ Create the following elements in your AWS Console
 12. Launch Instance from Image
 13. Follow the same process described in the section EC2 Instance
   
-
-    
-### AutoScaling group 
+### Launch Template
 1. Go to AutoScaling
 2. Go to launch template
 3. Select the created AMI in Application and OS Images (AMI)
 4. This AMI is located at My AMIs
 5. Instance type to t2.micro
-6. Select the key pair
-7. Wait for it... TBD
+6. Select the key pair as previous lessons.
+7. In the Network settings, is optional, in the autoscaling group setting we will be able to set the AZs where our AutoScaling group will deploy the application.
+8. Configure storage section and Resource sections are optional as well.
+9. Go to Create Launch Template
 
+### AutoScaling group 
+1. Go to AutoScaling
+2. Go to Create an Auto Scaling group
+3. Set the Auto Scaling group name to "DemoAutoscaling"
+4. Select the launch template of the previous section
+5. In the step 2 choose the VPC of the lab; for instance the "DemoNetworking"
+6. Choose the subnets where you want to ensure high availability
+7. Remember since this is a web server, you must select a public subnet.
+8. Load Balancer is optional but this case we want to test the app connected to it via HTTP 80
+9. Select Attach to an existing Load Balancer
+10. Select the existing Target Group created in the Load Balancer section.
+11. Leave the health check with default values
+12. In the group size section , select the
+    - Desired capacity
+    - Minimum capacity
+    - Maximun capacity
+13. Leave the scaling policies and the Instance scale-in proteccion with default values.
+14. Add notifications is optional, but it is recommended to activate. This uses another AWS Service called [SNS](https://aws.amazon.com/es/sns/)
+15. Optionally you can set tags
+16. Finally review the resume of the Auto Scaling settings. 
+17. Go to "Create AutoScaling group"
+    
 ### Clean-up
 
 1. Remove the AutoScaling
@@ -325,6 +348,44 @@ Step 2: [Create an Amazon Aurora DB cluster](https://docs.aws.amazon.com/AmazonR
 
 Step 3: [Create an EC2 instance and install a web server](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Tutorials.WebServerDB.CreateWebServer.html)
 
+
+### NAT Gateway
+1. Go to VPC
+2. Go to Create Nategateway
+3. Set the name to "DemoNat"
+4. Choose a public subnet of the VPC. Remember, the NAT must be created in the public subnet, but it will resolved to a private subnet.
+5. Select Public subnet
+6. Click on Allocate Elastic IP
+7. Choose the newly created Elastip IP in the Elastic IP allocation ID
+8. Choose a Tag optionally.
+9. Create the NAT Gateway
+10. Go to SubNets
+11. Notice route table associated with the the private subnet
+12. Go to Route Tables
+13. Select the route table
+14. Go to Routes section
+15. Edit Routes
+16. Add Route
+17. Select the CIDR 0.0.0.0/0
+18. Select the created NAT Gateway
+19. Save changes
+20. Go to Subnet Associations
+21. Add the private subnet in the Explicit subnet association section.
+22. Save associations
+23. Create the EC2 Instance in the private subnet
+24. SSH a public instance, and after that, you can ssh the private instance (Bastion)
+25. This command will be useful
+```
+   ssh-add -K EmTechLabDevops2022_1.pem
+   ssh -A ec2-user@54.166.171.1
+   ssh ec2-user@10.0.0.166
+```
+Use the private IP to SSH the private instance in the public instance
+26. Install the database
+
+```
+  yum install mysql
+```
 **Evaluation**
 
 | Indicator       | Score  |      
