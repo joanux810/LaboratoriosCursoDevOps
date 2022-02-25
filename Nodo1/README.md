@@ -351,7 +351,7 @@ Step 3: [Create an EC2 instance and install a web server](https://docs.aws.amazo
 
 ### NAT Gateway
 1. Go to VPC
-2. Go to Create Nategateway
+2. Go to Create NatGateway
 3. Set the name to "DemoNat"
 4. Choose a public subnet of the VPC. Remember, the NAT must be created in the public subnet, but it will resolved to a private subnet.
 5. Select Public subnet
