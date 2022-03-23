@@ -77,4 +77,6 @@ docker service ps
 docker service rm redis
 
 docker service rm my-web
+
+docker swarm leave --force
 ```
