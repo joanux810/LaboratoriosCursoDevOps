@@ -19,6 +19,7 @@ This could be 4 types:
 The metadata is data about the object like its name, labels etc.
 
 ```spec```:
+For objects that have a spec, you have to set this when you create the object, providing a description of the characteristics you want the resource to have: its desired state.
 
 
 ## ReplicaSet
@@ -57,3 +58,9 @@ With Kubernetes you don't need to modify your application to use an unfamiliar s
 
 https://kubernetes.io/docs/concepts/services-networking/service/
 
+
+### Do you have free time?
+
+[Kubernetes: The Documentary PART 1](https://youtu.be/BE77h7dmoQU)
+
+[Kubernetes: The Documentary PART 2](https://www.youtube.com/watch?v=318elIq37PE)
