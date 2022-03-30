@@ -19,8 +19,11 @@
 
 ## Terraform
 [Official Page](https://www.terraform.io/)
+
 [Documentation](https://www.terraform.io/intro)
+
 [Intro](https://www.terraform.io/intro/index.html)
+
 [Repo](https://github.com/hashicorp/terraform)
 
 ### Instructions
@@ -72,3 +75,4 @@ Outputs:
 
 jenkins_ip_address = "ec2-3-145-108-112.us-east-2.compute.amazonaws.com"
 ```
+11. Sadly the user data in outdated, so we need to start the service "manually" or modify the install.sh script following [this](https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/)
