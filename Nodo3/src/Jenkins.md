@@ -111,7 +111,7 @@ ssh -i "testJenkins.pem" ec2-user@ec2-18-118-207-40.us-east-2.compute.amazonaws.
 ```
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
-ca7369f9d4e64d94ab313282e85f5a1e
+
 
 14.  Enter this Administrator password on the Jenkins Console by pasting it into the input box, and click Next. Click Install suggested plugin.
 
