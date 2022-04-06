@@ -80,9 +80,9 @@ Outputs:
 jenkins_ip_address = "ec2-18-118-207-40.us-east-2.compute.amazonaws.com"
 ```
 
-http://ec2-18-118-207-40.us-east-2.compute.amazonaws.com:8080
+http://ec2-34-218-223-213.us-west-2.compute.amazonaws.com:8080
 
-11.  Sadly the user data in outdated, so we need to start the service "manually" or modify the install.sh script following [this](https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/)
+1.   Sadly the user data in outdated, so we need to start the service "manually" or modify the install.sh script following [this](https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/)
 
 ```
 wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat-stable/jenkins.repo
@@ -101,33 +101,91 @@ sudo git commit -m "updated the jenkins repo, the keypair name and the region th
 
 git push
 ```
-12.  Connect to the jenkins instance via SSH
+1.   Connect to the jenkins instance via SSH
 
 ```
 ssh -i "testJenkins.pem" ec2-user@ec2-18-118-207-40.us-east-2.compute.amazonaws.com
 ```
-13.  Get the Jenkins password
+1.   Get the Jenkins password
 
 ```
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
 
-14.  Enter this Administrator password on the Jenkins Console by pasting it into the input box, and click Next. Click Install suggested plugin.
+1.   Enter this Administrator password on the Jenkins Console by pasting it into the input box, and click Next. Click Install suggested plugin.
 
-15. Click Manage Jenkins → Manage Plugins → Available. Choose and install Docker plugin and GitHub Integration Plugin, then restart Jenkins by clicking the Restart Jenkins check box.
+2.  Click Manage Jenkins → Manage Plugins → Available. Choose and install Docker plugin and GitHub Integration Plugin, then restart Jenkins by clicking the Restart Jenkins check box.
 
-16. Credentials
+3.  Credentials
 
 Docker Hub: Click Credentials → global → Add Credentials, choose Username with password as Kind, enter the Docker Hub username and password and use dockerHubCredentials for ID.
 
 GitHub: Click Credentials → Global → Add Credentials , choose Username with password as Kind, enter the GitHub username and password and use gitHubCredentials for ID.
 
-17. Configure the Jenkins job and pipeline
+17. Configure the Jenkins job and [pipeline](https://www.jenkins.io/doc/book/pipeline/)
 From the Jenkins console, click New item. Choose Multibranch Pipeline, name it petclinic and click OK.
 
-18. Update the jenkinsfile to use your docker registry
+18. Update the [jenkinsfile](https://www.jenkins.io/doc/book/pipeline/jenkinsfile/) to use your docker registry
 
 ```
 app = docker.build("joanux810/petclinic-spinnaker-jenkins")
+```
+and
+```
+sh("docker rmi -f joanux810/petclinic-spinnaker-jenkins:latest || :")
+sh("docker rmi -f joanux810/petclinic-spinnaker-jenkins:$SHORT_COMMIT || :")
+```
+
+19. Choose GitHub and from the drop-down select the GitHub credentials. Enter the GitHub URL as shown below and click Save to save the Jenkins job.
+
+20. Install [kubectl](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html) on Cloud9
+
+```
+sudo curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
+
+sudo curl -o kubectl.sha256 https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl.sha256
+
+sudo openssl sha1 -sha256 kubectl
+
+sudo chmod +x ./kubectl
+
+sudo mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+
+sudo echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+
+kubectl version --short --client
+```
+
+21. Install EKS and AWS CLI
+    
+    ```
+sudo curl --silent --location -o "awscliv2.zip" "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+
+sudo unzip awscliv2.zip && sudo ./aws/install
+
+aws --version
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
+sudo mv -v /tmp/eksctl /usr/local/bin
+
+eksctl version
+    ```
+22.  Create the cluster with [EKS](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html )
+    
+    ```
+    eksctl create cluster --name petclinicEks --region us-east-1
+    kubectl get nodes -o wide
+    ```
+
+23. 
+```
+kubectl get svc -n spinnaker
+```
+
+
+Clean-up
+```
+ eksctl delete cluster --region=us-east-1 --name=eksPetclinic
 ```
