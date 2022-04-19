@@ -28,7 +28,7 @@
 
 [Repo](https://github.com/hashicorp/terraform)
 
-### Instructions
+### Instructions for Jenkins Server
 
 1. Fork the aws sample [repository](https://github.com/aws-samples/amazon-eks-jenkins-terraform.git)
 
@@ -140,64 +140,251 @@ sh("docker rmi -f joanux810/petclinic-spinnaker-jenkins:$SHORT_COMMIT || :")
 
 19. Choose GitHub and from the drop-down select the GitHub credentials. Enter the GitHub URL as shown below and click Save to save the Jenkins job.
 
-20. Install [kubectl](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html) on Cloud9
+20. Make sure your jenkins server run a build automatically. You will notice the artifacts about 5 minutes.
 
-```
-sudo su
-sudo curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
 
-sudo curl -o kubectl.sha256 https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl.sha256
 
-sudo openssl sha1 -sha256 kubectl
+### Instructions for Spinnaker CD server
 
-sudo chmod +x ./kubectl
-
-sudo mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
-
-sudo echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
-
-kubectl version --short --client
-```
-
-21. Install EKS and AWS CLI
+[Tutorial](https://aws.amazon.com/es/blogs/opensource/continuous-delivery-spinnaker-amazon-eks/)
     
+1. Using Cloud9, make sure use change the role of the Ec2's Instance to a role with EKS admin priviligies as the EK8's demo in the security tab.
+
+2. Turn off the AWS temporary credentials in your Cloud9 terminal
+   
+3. Create a AWS Access Key Id in the IAM service.
+   
+4. Let's prepare the tools on AWS Cloud 9 Terminal by installing AWS CLI, eksctl, kubectl and Halyard.
+
+kubectl
+
 ```
-sudo curl --silent --location -o "awscliv2.zip" "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 
-sudo unzip awscliv2.zip && sudo ./aws/install
+chmod +x ./kubectl
 
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+kubectl version
+```
+
+iam authenticator
+
+```
+curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+
+chmod +x ./aws-iam-authenticator
+
+mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$HOME/bin:$PATH
+
+echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+
+aws-iam-authenticator  help
+```
+
+Upgrade awscli
+
+```
 aws --version
+pip install awscli --upgrade --user
+```
 
-curl --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+eksctl
+
+```
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 
 sudo mv -v /tmp/eksctl /usr/local/bin
-
-export PATH=$PATH:/usr/local/bin/
-
-eksctl version
 ```
 
-22.  Create the cluster with [EKS](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
+Halyard
+
+```
+curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
+
+sudo bash InstallHalyard.sh
+
+hal -v
+```
+
+5. Create the Production Amazon EKS cluster
+
+```
+eksctl create cluster --name=eks-prod --nodes=3 --region=us-east-1 --write-kubeconfig=false
+```
+
+6. Create the UAT Amazon EKS cluster
+
+```
+eksctl create cluster --name=eks-uat --nodes=3 --region=us-east-1 --write-kubeconfig=false
+```
+
+7. Create the Spinnaker Amazon EKS cluster
+```
+eksctl create cluster --name=eks-spinnaker --nodes=2 --region=us-west-1 --write-kubeconfig=false
+```
+
+8. Retrieve Amazon EKS cluster kubectl contexts
+
+```
+aws eks update-kubeconfig --name eks-spinnaker --region us-west-1 --alias eks-spinnaker
+
+aws eks update-kubeconfig --name eks-uat --region us-east-1 --alias eks-uat
+
+aws eks update-kubeconfig --name eks-prod --region us-east-1 --alias eks-prod
+```
+9. Create and configure a Docker registry
+
+```
+hal config provider docker-registry enable 
+
+hal config provider docker-registry account add my-docker-registry-march2022 --address index.docker.io --repositories joanux810/petclinic-spinnaker-jenkins --username joanux810 --password
+```
+
+10.  Add and configure a GitHub account
+
+```
+hal config artifact github enable
+
+hal config artifact github account add joanux810 --username joanux810 --password --token
+```
+
+11. Add and configure Kubernetes accounts
+
+Production Amazon EKS account:
+
+```
+hal config provider kubernetes enable
+
+kubectl config use-context eks-prod
+
+CONTEXT=$(kubectl config current-context)
+
+kubectl apply --context $CONTEXT -f https://spinnaker.io/downloads/kubernetes/service-account.yml
+
+TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+
+kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
+
+kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+
+hal config provider kubernetes account add eks-prod-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022 --context $CONTEXT
+```
+
+UAT Amazon EKS account:
+
+```
+kubectl config use-context eks-uat 
+
+CONTEXT=$(kubectl config current-context) 
+
+kubectl apply --context $CONTEXT -f https://spinnaker.io/downloads/kubernetes/service-account.yml
+
+TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+
+kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
+
+kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+
+hal config provider kubernetes account add eks-uat-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022 --context $CONTEXT
+```
+
+Spinnaker Amazon EKS account:
+
+```
+kubectl config use-context eks-spinnaker 
+
+CONTEXT=$(kubectl config current-context)
+
+kubectl apply --context $CONTEXT -f https://spinnaker.io/downloads/kubernetes/service-account.yml
+
+TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+
+kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
+
+kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+
+hal config provider kubernetes account add eks-spinnaker-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022  --context $CONTEXT
+```
+
+12. Enable artifact support
+
+```
+hal config features edit --artifacts true
+```
+
+13. Configure Spinnaker to install in Kubernetes
     
 ```
-eksctl create cluster --name petclinic --version 1.20 --region us-east-1 --nodegroup-name linux-nodes --node-type t2.micro --nodes 2
+hal config deploy edit --type distributed --account-name eks-spinnaker-apr19
 ```
 
-24. Test installation with
+14. Configure Spinnaker to use AWS S3
 
 ```
-eksctl version
-kubectl get node
-kubectl get pod
-kubectl get svc
+export YOUR_ACCESS_KEY_ID=AKIATSGLO6ATLCK6WTBA
+
+hal config storage s3 edit --access-key-id $YOUR_ACCESS_KEY_ID --secret-access-key --region us-west-1
+
+hal config storage edit --type s3
 ```
 
-25. Install spinnaker service 
+ 15. Choose the Spinnaker version
+
 ```
-kubectl get svc -n spinnaker
+hal version list
+
+export VERSION=1.15.0
+
+hal config version edit --version $VERSION
+
+hal deploy apply
+
+```
+16. Verify the Spinnaker installation
+
+```
+kubectl -n spinnaker get svc
 ```
 
-Clean-up
+17. Expose Spinnaker using Elastic Loadbalancer
+
 ```
- eksctl delete cluster --region=us-east- --name=eksPetclinic
+export NAMESPACE=spinnaker
+
+kubectl -n ${NAMESPACE} expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public 
+
+kubectl -n ${NAMESPACE} expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public  
+
+export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') 
+
+export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') 
+
+hal config security api edit --override-base-url http://${API_URL} 
+
+hal config security ui edit --override-base-url http://${UI_URL}
+
+hal deploy apply
 ```
+
+18. Re-verify the Spinnaker installation
+```
+kubectl -n spinnaker get svc
+```
+
+19. Log in to Spinnaker console
+
+20. Create the UAT and Prod Application and Pipelines.
+
+
+### Cleanup
+
+```
+eksctl delete cluster --name=eks-uat --region=us-east-1
+
+eksctl delete cluster --name=eks-prod --region=us-east-1
+
+eksctl delete cluster --name=eks-spinnaker --region=us-east-1
+```
+
+
