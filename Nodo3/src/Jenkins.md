@@ -195,6 +195,8 @@ eksctl
 curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 
 sudo mv -v /tmp/eksctl /usr/local/bin
+
+eksctl version
 ```
 
 Halyard
@@ -207,38 +209,43 @@ sudo bash InstallHalyard.sh
 hal -v
 ```
 
+Note: add a non-root user like ec2-user
+
 5. Create the Production Amazon EKS cluster
 
 ```
-eksctl create cluster --name=eks-prod --nodes=3 --region=us-east-1 --write-kubeconfig=false
+eksctl create cluster --name=eks-prod --nodes=3 --region=us-west-2 --write-kubeconfig=false
 ```
 
 6. Create the UAT Amazon EKS cluster
 
 ```
-eksctl create cluster --name=eks-uat --nodes=3 --region=us-east-1 --write-kubeconfig=false
+eksctl create cluster --name=eks-uat --nodes=3 --region=us-west-2 --write-kubeconfig=false
 ```
 
 7. Create the Spinnaker Amazon EKS cluster
 ```
-eksctl create cluster --name=eks-spinnaker --nodes=2 --region=us-west-1 --write-kubeconfig=false
+eksctl create cluster --name=eks-spinnaker --nodes=2 --region=us-west-2 --write-kubeconfig=false
 ```
 
 8. Retrieve Amazon EKS cluster kubectl contexts
 
 ```
-aws eks update-kubeconfig --name eks-spinnaker --region us-west-1 --alias eks-spinnaker
+aws eks update-kubeconfig --name eks-spinnaker --region us-west-2 --alias eks-spinnaker
 
-aws eks update-kubeconfig --name eks-uat --region us-east-1 --alias eks-uat
+aws eks update-kubeconfig --name eks-uat --region us-west-2 --alias eks-uat
 
-aws eks update-kubeconfig --name eks-prod --region us-east-1 --alias eks-prod
+aws eks update-kubeconfig --name eks-prod --region us-west-2 --alias eks-prod
+
+cat /home/ec2-user/.kube/config
 ```
+
 9. Create and configure a Docker registry
 
 ```
 hal config provider docker-registry enable 
 
-hal config provider docker-registry account add my-docker-registry-march2022 --address index.docker.io --repositories joanux810/petclinic-spinnaker-jenkins --username joanux810 --password
+hal config provider docker-registry account add my-docker-registry --address index.docker.io --repositories joanux810/petclinic-spinnaker-jenkins --username joanux810 --password
 ```
 
 10.  Add and configure a GitHub account
@@ -268,7 +275,7 @@ kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
 
 kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
 
-hal config provider kubernetes account add eks-prod-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022 --context $CONTEXT
+hal config provider kubernetes account add eks-prod --provider-version v2 --docker-registries my-docker-registry --context $CONTEXT
 ```
 
 UAT Amazon EKS account:
@@ -286,7 +293,7 @@ kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
 
 kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
 
-hal config provider kubernetes account add eks-uat-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022 --context $CONTEXT
+hal config provider kubernetes account add eks-uat --provider-version v2 --docker-registries my-docker-registry --context $CONTEXT
 ```
 
 Spinnaker Amazon EKS account:
@@ -304,7 +311,7 @@ kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
 
 kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
 
-hal config provider kubernetes account add eks-spinnaker-apr19 --provider-version v2 --docker-registries my-docker-registry-march2022  --context $CONTEXT
+hal config provider kubernetes account add eks-spinnaker --provider-version v2 --docker-registries my-docker-registry --context $CONTEXT
 ```
 
 12. Enable artifact support
@@ -316,13 +323,13 @@ hal config features edit --artifacts true
 13. Configure Spinnaker to install in Kubernetes
     
 ```
-hal config deploy edit --type distributed --account-name eks-spinnaker-apr19
+hal config deploy edit --type distributed --account-name eks-spinnaker
 ```
 
 14. Configure Spinnaker to use AWS S3
 
 ```
-export YOUR_ACCESS_KEY_ID=AKIATSGLO6ATLCK6WTBA
+export YOUR_ACCESS_KEY_ID=USE_YOUR_ACCESS_KEY
 
 hal config storage s3 edit --access-key-id $YOUR_ACCESS_KEY_ID --secret-access-key --region us-west-1
 
@@ -380,11 +387,11 @@ kubectl -n spinnaker get svc
 ### Cleanup
 
 ```
-eksctl delete cluster --name=eks-uat --region=us-east-1
+eksctl delete cluster --name=eks-uat --region=us-west-2
 
-eksctl delete cluster --name=eks-prod --region=us-east-1
+eksctl delete cluster --name=eks-prod --region=us-west-2
 
-eksctl delete cluster --name=eks-spinnaker --region=us-east-1
+eksctl delete cluster --name=eks-spinnaker --region=us-west-2
 ```
 
 

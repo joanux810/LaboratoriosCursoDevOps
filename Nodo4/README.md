@@ -6,16 +6,14 @@ Implementar una estrategia ante desastres para garantizar la disponibilidad de u
 
 **Descripción**
 
-Levantar los recursos necesarios para levantar una aplicación en Java sobre la nube de AWS e implementación de una estrategia ante desastres como Backup and Restore
+Levantar los recursos necesarios para levantar una aplicación sobre la nube de AWS e implementación de una estrategia ante desastres como Warm StandBy
 
 **Tutorial**
 
 
-[UniShop App](https://wellarchitectedlabs.com/reliability/disaster-recovery/intro/)
+[Disaster Recovery on AWS](https://disaster-recovery.workshop.aws/en/intro.html)
 
-[Disaster Recovery on AWS](https://disaster-recovery.workshop.aws/en/intro/disaster-recovery.html)
-
-[Backup and Restore](https://wellarchitectedlabs.com/reliability/disaster-recovery/)
+[Warm-StandBy](https://disaster-recovery.workshop.aws/en/labs/basics/route53.html)
 
 **Rúbrica de evaluación**
 
@@ -26,5 +24,3 @@ Levantar los recursos necesarios para levantar una aplicación en Java sobre la 
 | Medianamente     | .5           |
 | No cumple        | 0            |
 
-
-https://disaster-recovery.workshop.aws/en/labs/basics/route53.html
