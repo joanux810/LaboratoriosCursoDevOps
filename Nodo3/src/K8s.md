@@ -34,6 +34,9 @@ kubectl get nodes
 
 3. Add Spot Managed node groups to your EKS cluster
 
+
+eksctl create nodegroup --cluster=petclinicDeploy --region=us-east-2 --managed --spot --name=spot-node-group-2vcpu-8gb --instance-types=m5.large,m5d.large,m4.large,m5a.large,m5ad.large,m5n.large,m5dn.large --nodes-min=1 --nodes-max=2 --asg-access
+
 ```
 eksctl create nodegroup --cluster=eksdemo --region=us-east-1 --managed --spot --name=spot-node-group-2vcpu-8gb --instance-types=m5.large,m5d.large,m4.large,m5a.large,m5ad.large,m5n.large,m5dn.large --nodes-min=2 --nodes-max=5 --asg-access
 
@@ -41,7 +44,7 @@ eksctl create nodegroup --cluster=eksdemo --region=us-east-1 --managed --spot --
 
 kubectl get nodes --show-labels --selector=eks.amazonaws.com/capacityType=SPOT | grep SPOT
 ```
-4. Deploy the Kubernetes Cluster Autoscaler
+1. Deploy the Kubernetes Cluster Autoscaler
    
 ```
 sed -i 's/eksspottutorial/eksspottutorial/g' cluster-autoscaler-autodiscover.yaml
