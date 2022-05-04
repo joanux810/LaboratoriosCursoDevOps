@@ -40,15 +40,11 @@ ssh -i "keypar2022.pem" ec2-user@ec2-44-193-212-63.compute-1.amazonaws.com
 
 node --version
 
-sudo yum -y update
+curl -sL https://rpm.nodesource.com/setup_16.x | sudo bash -
 
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
+sudo yum install -y nodejs
 
-. ~/.bashrc
-
-nvm install node
-
-node hello.js 5 9
+node --version  
 
 ```
 
